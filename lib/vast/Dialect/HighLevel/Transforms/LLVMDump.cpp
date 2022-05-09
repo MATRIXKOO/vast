@@ -4,20 +4,46 @@
 
 VAST_RELAX_WARNINGS
 #include <mlir/Transforms/DialectConversion.h>
+#include <mlir/Rewrite/PatternApplicator.h>
+
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/Conversion/LLVMCommon/TypeConverter.h>
 #include <mlir/Conversion/LLVMCommon/Pattern.h>
 
 #include <mlir/Target/LLVMIR/Export.h>
+#include <mlir/Target/LLVMIR/LLVMTranslationInterface.h>
 #include <mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h>
 
 #include <llvm/Support/raw_ostream.h>
 VAST_UNRELAX_WARNINGS
 
+#include <vast/Dialect/HighLevel/HighLevelDialect.hpp>
+#include <vast/Dialect/HighLevel/HighLevelOps.hpp>
+
 #include "PassesDetails.hpp"
 
 namespace vast::hl
 {
+    class ToLLLVMIR : public mlir::LLVMTranslationDialectInterface
+    {
+      public:
+        using Base = mlir::LLVMTranslationDialectInterface;
+        using Base::Base;
+
+        mlir::LogicalResult convertOperation(mlir::Operation *op, llvm::IRBuilderBase &irb,
+                                             mlir::LLVM::ModuleTranslation &state) const final
+        {
+            llvm::errs() << "\n\n\nconvert\n\n\n"; llvm::errs().flush();
+            return llvm::TypeSwitch< mlir::Operation *, mlir::LogicalResult >(op)
+                .Case([&](hl::TypeDefOp) {
+                    return mlir::success();
+                })
+                .Default([&](mlir::Operation *) {
+                    return mlir::failure();
+                });
+        }
+    };
+
     struct LLVMDump : LLVMDumpBase< LLVMDump >
     {
         void runOnOperation() override;
@@ -28,7 +54,25 @@ namespace vast::hl
         auto &mctx = this->getContext();
         mlir::ModuleOp op = this->getOperation();
 
-        mlir::registerLLVMDialectTranslation(mctx);
+        //mlir::PatternRewriter rewriter(&mctx);
+
+        //mlir::RewritePatternSet patterns(&mctx);
+        //patterns.add< erase_typ_def_op >(&mctx);
+        //auto frozen = mlir::FrozenRewritePatternSet(std::move(patterns));
+
+        //mlir::PatternApplicator applicator(frozen);
+        //applicator.applyDefaultCostModel();
+
+        //auto res = applicator.matchAndRewrite(op, rewriter);
+        //llvm::errs() << mlir::failed(res) << "\n";
+        //llvm::errs().flush();
+
+        //mlir::registerLLVMDialectTranslation(mctx);
+    llvm::errs() << "12herehahssahs\n"; llvm::errs().flush();
+        registerHLToLLVMIR(mctx);
+    llvm::errs() << "23herehahssahs\n"; llvm::errs().flush();
+        mlir::LLVMTranslationInterface iface(&mctx);
+
         llvm::LLVMContext lctx;
         auto lmodule = mlir::translateModuleToLLVMIR(op, lctx);
         if (!lmodule)
@@ -40,8 +84,21 @@ namespace vast::hl
         out << *lmodule;
         out.flush();
     }
-}
+} // namespace vast::hl
 
+void vast::hl::registerHLToLLVMIR(mlir::DialectRegistry &registry)
+{
+    llvm::errs() << "herehahssahs\n"; llvm::errs().flush();
+    registry.insert< HighLevelDialect >();
+    registry.addDialectInterface< HighLevelDialect, ToLLLVMIR >();
+    registry.addDialectInterface< HighLevelDialect, ToLLLVMIR >();
+}
+void vast::hl::registerHLToLLVMIR(mlir::MLIRContext &ctx)
+{
+    mlir::DialectRegistry registry;
+    registerHLToLLVMIR(registry);
+    ctx.appendDialectRegistry(registry);
+}
 
 std::unique_ptr< mlir::Pass > vast::hl::createLLVMDumpPass()
 {

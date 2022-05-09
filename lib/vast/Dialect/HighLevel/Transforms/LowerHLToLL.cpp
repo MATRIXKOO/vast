@@ -10,6 +10,9 @@ VAST_RELAX_WARNINGS
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/Conversion/LLVMCommon/TypeConverter.h>
 #include <mlir/Conversion/LLVMCommon/Pattern.h>
+
+#include <mlir/Target/LLVMIR/Export.h>
+#include <mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h>
 VAST_UNRELAX_WARNINGS
 
 #include "PassesDetails.hpp"
@@ -453,6 +456,16 @@ namespace vast::hl
         patterns.add< pattern::l_implicit_cast >(type_converter);
         if (mlir::failed(mlir::applyPartialConversion(op, trg, std::move(patterns))))
             return signalPassFailure();
+
+        //mlir::registerLLVMDialectTranslation(mctx);
+        //llvm::LLVMContext lctx;
+        //auto lmodule = mlir::translateModuleToLLVMIR(op, lctx);
+        //if (!lmodule)
+        //{
+        //    llvm::errs() << "Translate failed\n";
+        //    return signalPassFailure();
+        //}
+        //llvm::errs() << *lmodule << "\n"; llvm::errs().flush();
     }
 }
 
