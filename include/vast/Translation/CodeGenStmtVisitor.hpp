@@ -421,7 +421,8 @@ namespace vast::hl {
 
                 // case clang::CastKind::CK_MatrixCast:
                 default:
-                    VAST_UNREACHABLE( "unsupported cast kind" );
+                  return keep_category_cast();
+                    //VAST_UNREACHABLE( "unsupported cast kind" );
             }
         }
 
@@ -472,15 +473,25 @@ namespace vast::hl {
             return clang::cast< clang::VarDecl >(expr->getDecl()->getUnderlyingDecl());
         }
 
-        VarDeclOp getDefiningOpOfGlobalVar(const clang::VarDecl *decl) {
-            return context().vars.lookup(decl).template getDefiningOp< VarDeclOp >();
+        VarDecl getDefiningOpOfGlobalVar(const clang::VarDecl *decl) {
+            // Check if there is a definition or forward decl of the global variable; If it does
+            // not exist create the Operation for variable decl
+            if (context().vars.lookup(decl)) {
+              return context().vars.lookup(decl).template getDefiningOp< VarDecl >();
+            }
+
+            set_insertion_point_to_start(&context().getBodyRegion());
+            return make< VarDecl >(meta_location(decl),  visit(decl->getType()), decl->getName());
         }
 
         Operation* VisitEnumDeclRefExpr(const clang::DeclRefExpr *expr) {
             auto decl = clang::cast< clang::EnumConstantDecl >(expr->getDecl()->getUnderlyingDecl());
-            auto val = context().enumconsts.lookup(decl);
+            if (!context().enum_constants.lookup(decl->getName())) {
+              visit(decl);
+            }
+            //auto val = context().enum_constants.lookup(decl->getName());
             auto rty = visit(expr->getType());
-            return make< EnumRefOp >(meta_location(expr), rty, val.name());
+            return make< EnumRefOp >(meta_location(expr), rty, decl->getName());
         }
 
         Operation* VisitVarDeclRefExprImpl(const clang::DeclRefExpr *expr, Value var) {
@@ -496,7 +507,8 @@ namespace vast::hl {
         Operation* VisitFileVarDeclRefExpr(const clang::DeclRefExpr *expr) {
             auto decl = getDeclForVarRef(expr);
             auto var  = getDefiningOpOfGlobalVar(decl);
-            auto name = mlir::StringAttr::get(&mcontext(), var.name());
+            auto var_name = var != nullptr? var.name() : "missing variable name";
+            auto name = mlir::StringAttr::get(&mcontext(), var_name);
 
             auto rty = getLValueReturnType(expr);
             // reference to global variales first makes reference to global name, that makes
@@ -519,7 +531,8 @@ namespace vast::hl {
                 return VisitVarDeclRefExpr(expr);
             }
 
-            VAST_UNREACHABLE("unknown underlying declaration to be referenced");
+            return nullptr;
+            //VAST_UNREACHABLE("unknown underlying declaration to be referenced");
         }
 
         //
