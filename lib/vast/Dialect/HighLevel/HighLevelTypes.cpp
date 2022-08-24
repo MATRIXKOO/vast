@@ -20,7 +20,17 @@ namespace vast::hl
 
     mlir::FunctionType getFunctionType(mlir::Type functionPointer)
     {
-        return getFunctionType(functionPointer.cast< PointerType >());
+        //return getFunctionType(functionPointer.cast< PointerType >());
+
+        if (functionPointer.isa< PointerType > ()) {
+            return getFunctionType(functionPointer.cast< PointerType >());
+        } else if (functionPointer.isa< mlir::FunctionType > ()) {
+            return functionPointer.cast< mlir::FunctionType >();
+        }
+        mlir::TypeRange inputs = {::vast::hl::VoidType::get(functionPointer.getContext())};
+        mlir::TypeRange result = {::vast::hl::VoidType::get(functionPointer.getContext())};
+        return mlir::FunctionType::get(functionPointer.getContext(), inputs, result);
+
     }
 
     void HighLevelDialect::registerTypes() {

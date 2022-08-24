@@ -480,7 +480,6 @@ namespace vast::hl {
               return context().vars.lookup(decl).template getDefiningOp< VarDecl >();
             }
 
-            set_insertion_point_to_start(&context().getBodyRegion());
             return make< VarDecl >(meta_location(decl),  visit(decl->getType()), decl->getName());
         }
 
@@ -501,7 +500,10 @@ namespace vast::hl {
 
         Operation* VisitVarDeclRefExpr(const clang::DeclRefExpr *expr) {
             auto decl = getDeclForVarRef(expr);
-            return VisitVarDeclRefExprImpl(expr, context().vars.lookup(decl));
+            if (!vars().lookup(decl)) {
+              visit(decl);
+            }
+            return VisitVarDeclRefExprImpl(expr, vars().lookup(decl));
         }
 
         Operation* VisitFileVarDeclRefExpr(const clang::DeclRefExpr *expr) {
