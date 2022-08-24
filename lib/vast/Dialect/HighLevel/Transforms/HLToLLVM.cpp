@@ -303,8 +303,8 @@ namespace vast::hl
                 return mlir::success();
             }
 
-            mlir::LogicalResult make_init(LLVM::AllocaOp alloca, hl::ValueYieldOp yield,
-                                          auto &rewriter) const
+            mlir::LogicalResult store_init(LLVM::AllocaOp alloca, hl::ValueYieldOp yield,
+                                           auto &rewriter) const
             {
                 mlir::Value v = yield.getOperand();
                 if (auto init_list = v.getDefiningOp< hl::InitListExpr >())
@@ -313,6 +313,21 @@ namespace vast::hl
                 rewriter.template create< LLVM::StoreOp >(alloca.getLoc(), v, alloca);
                 return mlir::success();
             }
+
+            mlir::LogicalResult init(LLVM::AllocaOp alloca, hl::VarDecl var_op,
+                                     auto &rewriter) const
+            {
+                // No init is taking place
+                if (var_op.initializer().empty())
+                    return mlir::success();
+
+                auto yield = inline_init_region< hl::ValueYieldOp >(var_op, rewriter);
+                auto status = store_init(alloca, yield, rewriter);
+                rewriter.eraseOp(yield);
+                return status;
+            }
+
+
 
             mlir::LogicalResult matchAndRewrite(
                     hl::VarDecl var_op, hl::VarDecl::Adaptor ops,
@@ -329,14 +344,10 @@ namespace vast::hl
                 auto alloca = rewriter.create< LLVM::AllocaOp >(
                         var_op.getLoc(), ptr_type, count, 0);
 
-                auto yield = inline_init_region< hl::ValueYieldOp >(var_op, rewriter);
-                rewriter.setInsertionPoint(yield);
-                if (!mlir::succeeded(make_init(alloca, yield, rewriter)))
+                if (mlir::failed(init(alloca, var_op, rewriter)))
                     return mlir::failure();
 
-                rewriter.eraseOp(yield);
                 rewriter.replaceOp(var_op, {alloca});
-
                 return mlir::success();
             }
 
