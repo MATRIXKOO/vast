@@ -331,6 +331,14 @@ namespace vast::hl
         st.addRegion(std::move(region));
         st.addTypes(rty);
     }
+
+    void UnsupportedExprOp::build(Builder &bld, State &st, mlir::StringRef name, Type rty, std::unique_ptr< Region > &&region) {
+        Builder::InsertionGuard guard(bld);
+        st.addRegion(std::move(region));
+        st.addTypes(rty);
+        st.addAttribute(nameAttrName(st.name), bld.getStringAttr(name));
+    }
+
 }
 
 //===----------------------------------------------------------------------===//

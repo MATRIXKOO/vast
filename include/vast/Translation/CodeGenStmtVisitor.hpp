@@ -473,24 +473,29 @@ namespace vast::hl {
             return clang::cast< clang::VarDecl >(expr->getDecl()->getUnderlyingDecl());
         }
 
-        VarDecl getDefiningOpOfGlobalVar(const clang::VarDecl *decl) {
+        VarDeclOp getDefiningOpOfGlobalVar(const clang::VarDecl *decl) {
             // Check if there is a definition or forward decl of the global variable; If it does
             // not exist create the Operation for variable decl
             if (context().vars.lookup(decl)) {
-              return context().vars.lookup(decl).template getDefiningOp< VarDecl >();
+              return context().vars.lookup(decl).template getDefiningOp< VarDeclOp >();
             }
 
-            return make< VarDecl >(meta_location(decl),  visit(decl->getType()), decl->getName());
+            return make< VarDeclOp >(meta_location(decl),  visit(decl->getType()), decl->getName());
         }
 
         Operation* VisitEnumDeclRefExpr(const clang::DeclRefExpr *expr) {
-            auto decl = clang::cast< clang::EnumConstantDecl >(expr->getDecl()->getUnderlyingDecl());
-            if (!context().enum_constants.lookup(decl->getName())) {
+            /*auto decl = clang::cast< clang::EnumConstantDecl >(expr->getDecl()->getUnderlyingDecl());
+            if (!context().enumconsts.lookup(decl)) {
               visit(decl);
             }
-            //auto val = context().enum_constants.lookup(decl->getName());
             auto rty = visit(expr->getType());
-            return make< EnumRefOp >(meta_location(expr), rty, decl->getName());
+            auto val = context().enumconsts.lookup(decl);
+            return make< EnumRefOp >(meta_location(expr), rty, val.name());*/
+          auto decl = clang::cast< clang::EnumConstantDecl >(expr->getDecl()->getUnderlyingDecl());
+          auto val = context().enumconsts.lookup(decl);
+          auto enumConstName = val? val.name() : "missing enum const name";
+          auto rty = visit(expr->getType());
+          return make< EnumRefOp >(meta_location(expr), rty, enumConstName);
         }
 
         Operation* VisitVarDeclRefExprImpl(const clang::DeclRefExpr *expr, Value var) {
@@ -500,10 +505,10 @@ namespace vast::hl {
 
         Operation* VisitVarDeclRefExpr(const clang::DeclRefExpr *expr) {
             auto decl = getDeclForVarRef(expr);
-            if (!vars().lookup(decl)) {
+            if (!context().vars.lookup(decl)) {
               visit(decl);
             }
-            return VisitVarDeclRefExprImpl(expr, vars().lookup(decl));
+            return VisitVarDeclRefExprImpl(expr, context().vars.lookup(decl));
         }
 
         Operation* VisitFileVarDeclRefExpr(const clang::DeclRefExpr *expr) {

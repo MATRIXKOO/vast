@@ -15,7 +15,14 @@ namespace vast::hl
 {
     mlir::FunctionType getFunctionType(PointerType functionPointer)
     {
-        return functionPointer.getElementType().cast< mlir::FunctionType >();
+        //return functionPointer.getElementType().cast< mlir::FunctionType >();
+        if (functionPointer.isa< mlir::FunctionType > ()) {
+            return functionPointer.cast< mlir::FunctionType >();
+        } else {
+            mlir::TypeRange inputs = {::vast::hl::VoidType::get(functionPointer.getContext())};
+            mlir::TypeRange result = {::vast::hl::VoidType::get(functionPointer.getContext())};
+            return mlir::FunctionType::get(functionPointer.getContext(), inputs, result);
+        }
     }
 
     mlir::FunctionType getFunctionType(mlir::Type functionPointer)

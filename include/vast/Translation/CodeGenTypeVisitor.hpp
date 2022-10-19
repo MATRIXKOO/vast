@@ -11,6 +11,7 @@ VAST_UNRELAX_WARNINGS
 #include "vast/Translation/CodeGenMeta.hpp"
 #include "vast/Translation/CodeGenVisitorBase.hpp"
 #include "vast/Translation/CodeGenVisitorLens.hpp"
+#include "vast/Translation/CodeGenFallBackVisitor.hpp"
 
 namespace vast::hl {
 
@@ -53,6 +54,21 @@ namespace vast::hl {
             // }
 
             return res;
+        }
+
+        Type VisitDecayedType(const clang::DecayedType *type) {
+          return visit(type->desugar());
+        }
+
+        Type VisitAttributedType(const clang::AttributedType *type) {
+          return visit(type->desugar());
+        }
+
+        Type VisitBlockPointerType(const clang::BlockPointerType *type) {
+          if (type->isSugared()) {
+            return visit(type->desugar());
+          }
+          return visit(type->getPointeeType());
         }
 
         Type VisitElaboratedType(const clang::ElaboratedType *ty) {
@@ -112,7 +128,8 @@ namespace vast::hl {
                 }
             }
 
-            return Type{};
+            assert(0);
+            return nullptr;
         }
 
         Type VisitPointerType(const clang::PointerType *ty) {

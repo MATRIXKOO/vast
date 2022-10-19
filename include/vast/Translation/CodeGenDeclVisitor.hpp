@@ -177,7 +177,7 @@ namespace vast::hl {
             return declare(decl, [&] {
                 auto type = decl->getType();
                 bool has_allocator = type->isVariableArrayType();
-                bool has_init = decl->getInit();
+                bool has_init = false;//decl->getInit();
 
                 auto initializer = make_value_builder(decl->getInit());
 
