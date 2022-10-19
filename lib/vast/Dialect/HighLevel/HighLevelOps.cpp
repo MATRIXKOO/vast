@@ -315,6 +315,13 @@ namespace vast::hl
         st.addTypes(rty);
     }
 
+    void UnsupportedExprOp::build(Builder &bld, State &st, mlir::StringRef name, Type rty, std::unique_ptr< Region > &&region) {
+        Builder::InsertionGuard guard(bld);
+        st.addRegion(std::move(region));
+        st.addTypes(rty);
+        st.addAttribute(getNameAttrName(st.name), bld.getStringAttr(name));
+    }
+
     LogicalResult IndirectCallOp::inferReturnTypes(
         MContext *context, mlir::Optional<Location> location, mlir::ValueRange operands,
         mlir::DictionaryAttr attributes, mlir::RegionRange regions,
