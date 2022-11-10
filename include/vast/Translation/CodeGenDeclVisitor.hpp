@@ -117,7 +117,7 @@ namespace vast::hl {
                 }
 
                 // TODO make as pass
-                splice_trailing_scopes(fn);
+                //splice_trailing_scopes(fn);
 
                 auto &last_block = fn.getBlocks().back();
                 auto &ops        = last_block.getOperations();

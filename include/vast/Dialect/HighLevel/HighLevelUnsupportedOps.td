@@ -4,39 +4,18 @@
 #define VAST_DIALECT_HIGHLEVEL_IR_HIGHLEVELUNSUPPORTEDOPS
 
 def HighLevel_UnsupportedDeclOp : HighLevel_Op<"unsupportedDecl", [NoSideEffect]> {
-  let summary = "VAST unsupported operation";
-  let description = [{ VAST unsupported operation }];
- 
+  let summary = "VAST unsupported declaration operation";
+  let description = [{ VAST unsupported declaration operation }];
   
-  let arguments = (ins
-    StrAttr:$name,
-    Variadic<AnyType>:$elements
-  );
+  let arguments = (ins StrAttr:$name, Variadic<AnyType>:$elements);
   
+  let assemblyFormat = [{ $name attr-dict `:` type($elements) $elements}];
 }
 
-def HighLevel_UnsupportedInitExpr : HighLevel_Op< "unsupportedInitExpr",
-  [Terminator, NoSideEffect]
-> {
-  let summary = "VAST initializer list expression";
-  let description = [{ VAST initializer list expression }];
-
-  let arguments = (ins 
-      StrAttr:$name,
-      Variadic<AnyType>:$elements
-  );
-  let results = (outs Variadic<AnyType>);
-
-  let assemblyFormat = "$elements attr-dict `:` functional-type($elements, results)";
-}
-
-def HighLevel_UnsupportedExprOp
-  : HighLevel_Op< "unsupportedExpr", [RecursiveSideEffects, SingleBlock] >
-  , Arguments<(ins StrAttr:$name)>
-  , Results<(outs AnyType:$result)>
-{
-  let summary = "VAST expression";
-  let description = [{ VAST expression }];
+def HighLevel_UnsupportedExprOp : HighLevel_Op<"unsupportedExpr", [NoSideEffect, SingleBlock] >
+  , Arguments<(ins StrAttr:$name)>, Results<(outs AnyType:$result)> {
+  let summary = "VAST unsupported expression";
+  let description = [{ VAST unsupported expression }];
 
   let regions = (region SizedRegion<1>:$subexpr);
 
@@ -44,9 +23,8 @@ def HighLevel_UnsupportedExprOp
   let builders = [ OpBuilder<(ins "::mlir::StringRef":$name, "::mlir::Type":$rty, "std::unique_ptr<::mlir::Region> &&":$region)> ];
 
   let assemblyFormat = [{
-     attr-dict `:` type($result) $subexpr
+     $name attr-dict `:` type($result) $subexpr
   }];
 }
-
 
 #endif // VAST_DIALECT_HIGHLEVEL_IR_HIGHLEVELUNSUPPORTEDOPS
