@@ -3,6 +3,17 @@
 #ifndef VAST_DIALECT_HIGHLEVEL_IR_HIGHLEVELUNSUPPORTEDOPS
 #define VAST_DIALECT_HIGHLEVEL_IR_HIGHLEVELUNSUPPORTEDOPS
 
+def HighLevel_UnsupportedDeclOp : HighLevel_Op<"unsupportedDecl", [NoSideEffect]> {
+  let summary = "VAST unsupported operation";
+  let description = [{ VAST unsupported operation }];
+
+
+  let arguments = (ins
+    StrAttr:$name,
+    Variadic<AnyType>:$elements
+  );
+}
+
 def HighLevel_UnsupportedExprOp
   : HighLevel_Op< "unsupportedExpr", [RecursiveSideEffects, SingleBlock] >
   , Arguments<(ins StrAttr:$name)>
