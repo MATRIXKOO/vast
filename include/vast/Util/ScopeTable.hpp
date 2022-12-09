@@ -11,8 +11,8 @@ VAST_UNRELAX_WARNINGS
 namespace vast {
 
     using LogicalResult = mlir::LogicalResult;
-    using StringRef     = llvm::StringRef; 
-    
+    using StringRef     = llvm::StringRef;
+
     template< typename From, typename Value >
     struct ScopedValueTable : llvm::ScopedHashTable< From, Value > {
         using ValueType = Value;
@@ -30,7 +30,7 @@ namespace vast {
 
 
     template< typename Value >
-    struct ScopedSymbolTable : ScopedValueTable< StringRef, Value > 
+    struct ScopedSymbolTable : ScopedValueTable< StringRef, Value >
     {
         using Base = ScopedValueTable< StringRef, Value >;
         using Base::Base;
