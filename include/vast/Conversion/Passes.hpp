@@ -14,6 +14,7 @@ VAST_UNRELAX_WARNINGS
 #include <vast/Dialect/HighLevel/HighLevelDialect.hpp>
 #include <vast/Dialect/HighLevel/HighLevelOps.hpp>
 #include <vast/Dialect/LowLevel/LowLevelDialect.hpp>
+#include <vast/Dialect/ABI/ABIDialect.hpp>
 
 #include <memory>
 
@@ -31,6 +32,8 @@ namespace vast
     std::unique_ptr< mlir::Pass > createCoreToLLVMPass();
 
     std::unique_ptr< mlir::Pass > createHLFuncToFuncPass();
+
+    std::unique_ptr< mlir::Pass > createABIfyPass();
 
     // Generate the code for registering passes.
     #define GEN_PASS_REGISTRATION
