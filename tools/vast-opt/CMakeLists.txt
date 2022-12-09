@@ -15,6 +15,7 @@ target_link_libraries(vast-opt
         MLIROptLib
         MLIRHighLevel
 
+        vast_abi
         vast_settings
 )
 
